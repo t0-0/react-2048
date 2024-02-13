@@ -2,7 +2,7 @@
 
 import { useRef, useEffect } from "react";
 
-const Tile = (props: { num: number }) => {
+const Tile = () => {
   const targetRef: any = useRef(null);
   useEffect(() => {
     if (targetRef.current != null) {
@@ -26,7 +26,9 @@ const NumberTile = (props: { num: number }) => {
 
 const Grid = () => {
   const gridNumber: number = 5;
-  const Tiles = Array(gridNumber * gridNumber).fill(0);
+  const TileIDs = Array(gridNumber * gridNumber)
+    .fill(0)
+    .map((_, index) => index);
   return (
     <div className="aspect-square bg-teal-200">
       <div
@@ -34,8 +36,8 @@ const Grid = () => {
           gridNumber === 3 ? "grid-cols-3" : "grid-cols-5"
         } gap-3 p-4`}
       >
-        {Tiles.map((tile) => (
-          <Tile key={tile} num={tile} />
+        {TileIDs.map((id) => (
+          <Tile key={id} />
         ))}
       </div>
     </div>
