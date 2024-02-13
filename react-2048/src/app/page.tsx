@@ -4,12 +4,17 @@ import { useRef, useEffect } from "react";
 
 const Tile = (props: { num: number }) => {
   const targetRef: any = useRef(null);
-  const num = props.num;
   useEffect(() => {
     if (targetRef.current != null) {
       console.log(targetRef.current!.getBoundingClientRect()["x"]);
     }
   });
+  return <div className="aspect-square bg-white" ref={targetRef}></div>;
+};
+
+const NumberTile = (props: { num: number }) => {
+  const targetRef: any = useRef(null);
+  const num = props.num;
   return (
     <div className="aspect-square bg-white" ref={targetRef}>
       <div className="flex justify-center items-center h-full">
