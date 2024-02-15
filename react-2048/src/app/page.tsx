@@ -109,10 +109,33 @@ const Grid = () => {
   let touchStart: MutableRefObject<number[]> = useRef([0, 0]);
   useEffect(() => {
     const handleTouchStart = (event: any) => {
-      touchStart.current = [event.clientX, event.clientY];
+      touchStart.current = [event.touches[0].clientX, event.touches[0].clientY];
       event.stopPropagation();
     };
     const handleTouchEnd = (event: any) => {
+      console.log(event);
+      const deltaX = event.changedTouches[0].clientX - touchStart.current[0];
+      const deltaY = event.changedTouches[0].clientY - touchStart.current[1];
+      if (Math.abs(deltaX) < Math.abs(deltaY) && 0 < Math.abs(deltaY)) {
+        if (deltaY < 0) {
+          setY((prev) => prev - 1);
+        } else {
+          setY((prev) => prev + 1);
+        }
+      } else if (Math.abs(deltaY) < Math.abs(deltaX) && 0 < Math.abs(deltaX)) {
+        if (deltaX < 0) {
+          setX((prev) => prev - 1);
+        } else {
+          setX((prev) => prev + 1);
+        }
+      }
+      event.stopPropagation();
+    };
+    const handleMouseDown = (event: any) => {
+      touchStart.current = [event.clientX, event.clientY];
+      event.stopPropagation();
+    };
+    const handleMouseUp = (event: any) => {
       const deltaX = event.clientX - touchStart.current[0];
       const deltaY = event.clientY - touchStart.current[1];
       if (Math.abs(deltaX) < Math.abs(deltaY) && 0 < Math.abs(deltaY)) {
@@ -131,13 +154,13 @@ const Grid = () => {
       event.stopPropagation();
     };
     const grid = document.getElementById("grid");
-    grid!.addEventListener("mousedown", handleTouchStart);
-    grid!.addEventListener("mouseup", handleTouchEnd);
+    grid!.addEventListener("mousedown", handleMouseDown);
+    grid!.addEventListener("mouseup", handleMouseUp);
     grid!.addEventListener("touchstart", handleTouchStart);
     grid!.addEventListener("touchend", handleTouchEnd);
     return () => {
-      grid!.removeEventListener("mousedown", handleTouchStart);
-      grid!.removeEventListener("mouseup", handleTouchEnd);
+      grid!.removeEventListener("mousedown", handleMouseDown);
+      grid!.removeEventListener("mouseup", handleMouseUp);
       grid!.removeEventListener("touchstart", handleTouchStart);
       grid!.removeEventListener("touchend", handleTouchEnd);
     };
