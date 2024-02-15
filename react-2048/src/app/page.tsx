@@ -107,26 +107,39 @@ const Grid = () => {
     return (height - 20) / gridNumber - 12;
   };
   let touchStart: MutableRefObject<number[]> = useRef([0, 0]);
-  const handleTouchStart = (event: any) => {
-    touchStart.current = [event.touches[0].clientX, event.touches[0].clientY];
-  };
-  const handleTouchEnd = (event: any) => {
-    const deltaX = event.touches[0].clientX - touchStart.current[0];
-    const deltaY = event.touches[0].clientY - touchStart.current[1];
-    if (Math.abs(deltaX) < Math.abs(deltaY) && 1 < Math.abs(deltaY)) {
-      if (0 < deltaY) {
-        setY((prev)=>prev-1)
+  useEffect(() => {
+    const handleTouchStart = (event: any) => {
+      touchStart.current = [event.touches[0].clientX, event.touches[0].clientY];
+      event.stopPropagation();
+    };
+    const handleTouchEnd = (event: any) => {
+      const deltaX = event.touches[0].clientX - touchStart.current[0];
+      const deltaY = event.touches[0].clientY - touchStart.current[1];
+      if (Math.abs(deltaX) < Math.abs(deltaY) && 1 < Math.abs(deltaY)) {
+        if (deltaY < 0) {
+          setY((prev) => prev - 1);
+        } else {
+          setY((prev) => prev + 1);
+        }
+      } else if (Math.abs(deltaY) < Math.abs(deltaX) && 1 < Math.abs(deltaX)) {
+        if (deltaX < 0) {
+          setX((prev) => prev - 1);
+        } else {
+          setX((prev) => prev + 1);
+        }
       }
-    }
-  };
+      event.stopPropagation();
+    };
+    targetRef.current.addEventListener("touchstart", handleTouchStart);
+    targetRef.current.addEventListener("touchend", handleTouchEnd);
+    return () => {
+      targetRef.current.removeEventListener("touchstart", handleTouchStart);
+      targetRef.current.removeEventListener("touchend", handleTouchEnd);
+    };
+  }, []);
   return (
     <>
-      <div
-        className="relative aspect-square bg-teal-200"
-        ref={targetRef}
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-      >
+      <div className="relative aspect-square bg-teal-200" ref={targetRef}>
         {numberTiles.map((numberTile) => (
           <NumberTile
             key={numberTile.id}
