@@ -1,6 +1,13 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
+import {
+  useRef,
+  useEffect,
+  useState,
+  MutableRefObject,
+  Dispatch,
+  SetStateAction,
+} from "react";
 
 const useRefHeight = (ref: any) => {
   const [height, setHeight] = useState(80);
@@ -17,9 +24,11 @@ const useRefHeight = (ref: any) => {
   return height;
 };
 
-const useKeyDown = () => {
-  const [x, setX] = useState(0);
-  const [y, setY] = useState(0);
+const useKeyDown = (props: {
+  setX: Dispatch<SetStateAction<number>>;
+  setY: Dispatch<SetStateAction<number>>;
+}) => {
+  const { setX, setY } = props;
   useEffect(() => {
     const handleKeyDown = (event: any) => {
       if (event.key === "ArrowUp") {
@@ -37,7 +46,7 @@ const useKeyDown = () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
-  return { x: x, y: y };
+  return;
 };
 
 const Tile = () => {
@@ -87,23 +96,43 @@ const Grid = () => {
   const TileIDs = Array(gridNumber * gridNumber)
     .fill(0)
     .map((_, index) => index);
+  const [x, setX] = useState(0);
+  const [y, setY] = useState(0);
   const numberTiles = [
-    { id: 0, num: 2, coord: useKeyDown(), top: 16, left: 16 },
+    { id: 0, num: 2, coord: useKeyDown({ setX, setY }), top: 16, left: 16 },
   ];
   const targetRef: any = useRef(null);
   const height = useRefHeight(targetRef);
   const tileHeight = () => {
     return (height - 20) / gridNumber - 12;
   };
+  let touchStart: MutableRefObject<number[]> = useRef([0, 0]);
+  const handleTouchStart = (event: any) => {
+    touchStart.current = [event.touches[0].clientX, event.touches[0].clientY];
+  };
+  const handleTouchEnd = (event: any) => {
+    const deltaX = event.touches[0].clientX - touchStart.current[0];
+    const deltaY = event.touches[0].clientY - touchStart.current[1];
+    if (Math.abs(deltaX) < Math.abs(deltaY) && 1 < Math.abs(deltaY)) {
+      if (0 < deltaY) {
+        setY((prev)=>prev-1)
+      }
+    }
+  };
   return (
     <>
-      <div className="relative aspect-square bg-teal-200" ref={targetRef}>
+      <div
+        className="relative aspect-square bg-teal-200"
+        ref={targetRef}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
         {numberTiles.map((numberTile) => (
           <NumberTile
             key={numberTile.id}
             num={numberTile.num}
-            x={numberTile.coord.x * (12 + tileHeight())}
-            y={numberTile.coord.y * (12 + tileHeight())}
+            x={x * (12 + tileHeight())}
+            y={y * (12 + tileHeight())}
             size={tileHeight()}
             top={numberTile.top}
             left={numberTile.left}
