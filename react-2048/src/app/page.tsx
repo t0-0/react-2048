@@ -140,11 +140,7 @@ const Grid = () => {
   }, []);
   return (
     <>
-      <div
-        id="grid"
-        className="relative aspect-square bg-teal-200"
-        ref={targetRef}
-      >
+      <div className="relative aspect-square bg-teal-200" ref={targetRef}>
         {numberTiles.map((numberTile) => (
           <NumberTile
             key={numberTile.id}
@@ -171,7 +167,11 @@ const Grid = () => {
 };
 
 const Home = () => {
-  return <Grid />;
+  return (
+    <div id="grid">
+      <Grid />
+    </div>
+  );
 };
 
 export default Home;
