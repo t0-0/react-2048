@@ -110,10 +110,11 @@ const Grid = () => {
   useEffect(() => {
     const handleTouchStart = (event: any) => {
       touchStart.current = [event.touches[0].clientX, event.touches[0].clientY];
-      event.stopPropagation();
+    };
+    const handleTouchMove = (event: any) => {
+      event.preventDefault();
     };
     const handleTouchEnd = (event: any) => {
-      console.log(event);
       const deltaX = event.changedTouches[0].clientX - touchStart.current[0];
       const deltaY = event.changedTouches[0].clientY - touchStart.current[1];
       if (Math.abs(deltaX) < Math.abs(deltaY) && 0 < Math.abs(deltaY)) {
@@ -129,11 +130,12 @@ const Grid = () => {
           setX((prev) => prev + 1);
         }
       }
-      event.stopPropagation();
     };
     const handleMouseDown = (event: any) => {
       touchStart.current = [event.clientX, event.clientY];
-      event.stopPropagation();
+    };
+    const handleMouseMove = (event: any) => {
+      event.preventDefault();
     };
     const handleMouseUp = (event: any) => {
       const deltaX = event.clientX - touchStart.current[0];
@@ -151,17 +153,20 @@ const Grid = () => {
           setX((prev) => prev + 1);
         }
       }
-      event.stopPropagation();
     };
     const grid = document.getElementById("grid");
     grid!.addEventListener("mousedown", handleMouseDown);
+    grid!.addEventListener("mousemove", handleMouseMove);
     grid!.addEventListener("mouseup", handleMouseUp);
     grid!.addEventListener("touchstart", handleTouchStart);
+    grid!.addEventListener("touchmove", handleTouchMove);
     grid!.addEventListener("touchend", handleTouchEnd);
     return () => {
       grid!.removeEventListener("mousedown", handleMouseDown);
+      grid!.removeEventListener("mousemove", handleMouseMove);
       grid!.removeEventListener("mouseup", handleMouseUp);
       grid!.removeEventListener("touchstart", handleTouchStart);
+      grid!.removeEventListener("touchmove", handleTouchMove);
       grid!.removeEventListener("touchend", handleTouchEnd);
     };
   }, []);
