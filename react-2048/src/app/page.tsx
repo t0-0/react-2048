@@ -109,19 +109,19 @@ const Grid = () => {
   let touchStart: MutableRefObject<number[]> = useRef([0, 0]);
   useEffect(() => {
     const handleTouchStart = (event: any) => {
-      touchStart.current = [event.touches[0].clientX, event.touches[0].clientY];
+      touchStart.current = [event.clientX, event.clientY];
       event.stopPropagation();
     };
     const handleTouchEnd = (event: any) => {
-      const deltaX = event.touches[0].clientX - touchStart.current[0];
-      const deltaY = event.touches[0].clientY - touchStart.current[1];
-      if (Math.abs(deltaX) < Math.abs(deltaY) && 1 < Math.abs(deltaY)) {
+      const deltaX = event.clientX - touchStart.current[0];
+      const deltaY = event.clientY - touchStart.current[1];
+      if (Math.abs(deltaX) < Math.abs(deltaY) && 0 < Math.abs(deltaY)) {
         if (deltaY < 0) {
           setY((prev) => prev - 1);
         } else {
           setY((prev) => prev + 1);
         }
-      } else if (Math.abs(deltaY) < Math.abs(deltaX) && 1 < Math.abs(deltaX)) {
+      } else if (Math.abs(deltaY) < Math.abs(deltaX) && 0 < Math.abs(deltaX)) {
         if (deltaX < 0) {
           setX((prev) => prev - 1);
         } else {
@@ -131,9 +131,13 @@ const Grid = () => {
       event.stopPropagation();
     };
     const grid = document.getElementById("grid");
+    grid!.addEventListener("mousedown", handleTouchStart);
+    grid!.addEventListener("mouseup", handleTouchEnd);
     grid!.addEventListener("touchstart", handleTouchStart);
     grid!.addEventListener("touchend", handleTouchEnd);
     return () => {
+      grid!.removeEventListener("mousedown", handleTouchStart);
+      grid!.removeEventListener("mouseup", handleTouchEnd);
       grid!.removeEventListener("touchstart", handleTouchStart);
       grid!.removeEventListener("touchend", handleTouchEnd);
     };
