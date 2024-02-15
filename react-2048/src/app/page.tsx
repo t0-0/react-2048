@@ -130,16 +130,21 @@ const Grid = () => {
       }
       event.stopPropagation();
     };
-    targetRef.current.addEventListener("touchstart", handleTouchStart);
-    targetRef.current.addEventListener("touchend", handleTouchEnd);
+    const grid = document.getElementById("grid");
+    grid!.addEventListener("touchstart", handleTouchStart);
+    grid!.addEventListener("touchend", handleTouchEnd);
     return () => {
-      targetRef.current.removeEventListener("touchstart", handleTouchStart);
-      targetRef.current.removeEventListener("touchend", handleTouchEnd);
+      grid!.removeEventListener("touchstart", handleTouchStart);
+      grid!.removeEventListener("touchend", handleTouchEnd);
     };
   }, []);
   return (
     <>
-      <div className="relative aspect-square bg-teal-200" ref={targetRef}>
+      <div
+        id="grid"
+        className="relative aspect-square bg-teal-200"
+        ref={targetRef}
+      >
         {numberTiles.map((numberTile) => (
           <NumberTile
             key={numberTile.id}
