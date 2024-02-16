@@ -577,7 +577,7 @@ const Game = () => {
       return [
         {
           id: 0,
-          num: 1000000,
+          num: 2,
           top: top,
           left: left,
           x: 0,
