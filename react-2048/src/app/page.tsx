@@ -65,6 +65,7 @@ const cleanUp = (props: {
             .fill(5)
             .map(() => 0)
         );
+      let maxID = Math.max(...prev.map((value) => value.id));
       for (const numberTile of prev.sort((a, b) =>
         a.mergeState === MergeState.merged ? -1 : 1
       )) {
@@ -85,7 +86,7 @@ const cleanUp = (props: {
         } else if (mergeState === MergeState.merged) {
           if (grid[top + y][left + x] === 0) {
             newNumberTiles.push({
-              id: id,
+              id: maxID + 1,
               num: num * 2,
               top: top + y,
               left: left + x,
@@ -95,12 +96,13 @@ const cleanUp = (props: {
               moveState: MoveState.notMoving,
             });
           }
+          maxID += 1;
           grid[top + y][left + x] = 1;
         }
       }
       return newNumberTiles;
     });
-  }, 500);
+  }, 100);
 };
 
 const moveUp = (props: {
@@ -111,10 +113,8 @@ const moveUp = (props: {
     const newNumberTiles: TypeTileState[] = [];
     const numbers: number[] = Array(5).fill(-1);
     const lasts: number[] = Array(5).fill(-1);
-    let id = -1;
     for (const numberTile of sortedPrev) {
-      id += 1;
-      const { num, top, left, x, y } = numberTile;
+      const { id, num, top, left, x, y } = numberTile;
       if (numbers[left + x] === num) {
         newNumberTiles.push({
           id: id,
@@ -152,7 +152,7 @@ const moveUp = (props: {
     });
     const randomNumber = getRandomNumber(0, count - 1);
     newNumberTiles.push({
-      id: id + 1,
+      id: Math.max(...newNumberTiles.map((value) => value.id)) + 1,
       num: 2,
       top: 4,
       left: candidate[randomNumber],
@@ -173,10 +173,8 @@ const moveDown = (props: {
     const newNumberTiles: TypeTileState[] = [];
     const numbers: number[] = Array(5).fill(-1);
     const lasts: number[] = Array(5).fill(5);
-    let id = -1;
     for (const numberTile of sortedPrev) {
-      id += 1;
-      const { num, top, left, x, y } = numberTile;
+      const { id, num, top, left, x, y } = numberTile;
       if (numbers[left + x] === num) {
         newNumberTiles.push({
           id: id,
@@ -214,7 +212,7 @@ const moveDown = (props: {
     });
     const randomNumber = getRandomNumber(0, count - 1);
     newNumberTiles.push({
-      id: id + 1,
+      id: Math.max(...newNumberTiles.map((value) => value.id)) + 1,
       num: 2,
       top: 0,
       left: candidate[randomNumber],
@@ -235,10 +233,8 @@ const moveLeft = (props: {
     const newNumberTiles: TypeTileState[] = [];
     const numbers: number[] = Array(5).fill(-1);
     const lasts: number[] = Array(5).fill(-1);
-    let id = -1;
     for (const numberTile of sortedPrev) {
-      id += 1;
-      const { num, top, left, x, y } = numberTile;
+      const { id, num, top, left, x, y } = numberTile;
       if (numbers[top + y] === num) {
         newNumberTiles.push({
           id: id,
@@ -276,7 +272,7 @@ const moveLeft = (props: {
     });
     const randomNumber = getRandomNumber(0, count - 1);
     newNumberTiles.push({
-      id: id + 1,
+      id: Math.max(...newNumberTiles.map((value) => value.id)) + 1,
       num: 2,
       top: candidate[randomNumber],
       left: 4,
@@ -297,10 +293,8 @@ const moveRight = (props: {
     const newNumberTiles: TypeTileState[] = [];
     const numbers: number[] = Array(5).fill(-1);
     const lasts: number[] = Array(5).fill(5);
-    let id = -1;
     for (const numberTile of sortedPrev) {
-      id += 1;
-      const { num, top, left, x, y } = numberTile;
+      const { id, num, top, left, x, y } = numberTile;
       if (numbers[top + y] === num) {
         newNumberTiles.push({
           id: id,
@@ -338,7 +332,7 @@ const moveRight = (props: {
     });
     const randomNumber = getRandomNumber(0, count - 1);
     newNumberTiles.push({
-      id: id + 1,
+      id: Math.max(...newNumberTiles.map((value) => value.id)) + 1,
       num: 2,
       top: candidate[randomNumber],
       left: 0,
@@ -477,8 +471,9 @@ const NumberTile = (props: {
   return (
     <div
       className={`${
-        props.moveState === MoveState.moving ? "duration-500" : ""
+        props.moveState === MoveState.moving ? "duration-[100ms]" : ""
       } h-min w-min`}
+      // className="duration-500 h-min w-min"
       style={{
         transform: `translate(${props.x * (12 + tileHeight())}px,${
           props.y * (12 + tileHeight())
@@ -601,7 +596,29 @@ const Game = () => {
 };
 
 const Home = () => {
-  return <Game />;
+  return (
+    <>
+      <Game />
+      <p>
+        Inspired by{" "}
+        <a
+          className="text-blue-500 underline"
+          href="https://play2048.co/"
+          target="_blank"
+        >
+          2048
+        </a>{" "}
+        <a
+          className="text-blue-500 underline"
+          href="http://gabrielecirulli.com"
+          target="_blank"
+        >
+          Gabriele Cirulli
+        </a>{" "}
+        created.
+      </p>
+    </>
+  );
 };
 
 export default Home;
