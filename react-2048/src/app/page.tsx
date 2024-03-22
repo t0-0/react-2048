@@ -2,6 +2,9 @@
 
 import { useRef, useEffect, useState, Dispatch, SetStateAction } from "react";
 import getRandomNumber from "@/app/utils/randomNumber";
+import { moveUp, moveDown, moveLeft, moveRight } from "@/app/actions/move";
+import { MergeState, MoveState } from "@/app/states/enum";
+import { TypeTileState } from "@/app/states/tileState";
 
 const useRefHeight = (props: { ref: any; setHeight: any }) => {
   useEffect(() => {
@@ -15,26 +18,6 @@ const useRefHeight = (props: { ref: any; setHeight: any }) => {
     return () => window.removeEventListener("resize", updateHeight);
   }, []);
 };
-
-enum MergeState {
-  none,
-  merged,
-}
-enum MoveState {
-  moving,
-  notMoving,
-}
-
-interface TypeTileState {
-  id: number;
-  num: number;
-  top: number;
-  left: number;
-  x: number;
-  y: number;
-  mergeState: MergeState;
-  moveState: MoveState;
-}
 
 const TileState = () => {
   const [numberTiles, setNumberTiles] = useState<TypeTileState[]>([
@@ -52,314 +35,32 @@ const TileState = () => {
   return { numberTiles: numberTiles, setNumberTiles: setNumberTiles };
 };
 
-const cleanUp = (props: {
-  setNumberTiles: Dispatch<SetStateAction<TypeTileState[]>>;
-}) => {
-  setTimeout(() => {
-    props.setNumberTiles((prev) => {
-      const newNumberTiles = [];
-      const grid: number[][] = Array(5)
-        .fill(0)
-        .map(() =>
-          Array(5)
-            .fill(5)
-            .map(() => 0)
-        );
-      let maxID = Math.max(...prev.map((value) => value.id));
-      for (const numberTile of prev.sort((a, b) =>
-        a.mergeState === MergeState.merged ? -1 : 1
-      )) {
-        const { id, num, top, left, x, y, mergeState } = numberTile;
-        if (mergeState === MergeState.none) {
-          if (grid[top + y][left + x] === 0) {
-            newNumberTiles.push({
-              id: id,
-              num: num,
-              top: top + y,
-              left: left + x,
-              x: 0,
-              y: 0,
-              mergeState: mergeState,
-              moveState: MoveState.notMoving,
-            });
-          }
-        } else if (mergeState === MergeState.merged) {
-          if (grid[top + y][left + x] === 0) {
-            newNumberTiles.push({
-              id: maxID + 1,
-              num: num * 2,
-              top: top + y,
-              left: left + x,
-              x: 0,
-              y: 0,
-              mergeState: MergeState.none,
-              moveState: MoveState.notMoving,
-            });
-          }
-          maxID += 1;
-          grid[top + y][left + x] = 1;
-        }
-      }
-      return newNumberTiles;
-    });
-  }, 100);
-};
-
-const moveUp = (props: {
-  setNumberTiles: Dispatch<SetStateAction<TypeTileState[]>>;
-}) => {
-  props.setNumberTiles((prev) => {
-    const sortedPrev = prev.sort((a, b) => a.top + a.y - (b.top + b.y));
-    const newNumberTiles: TypeTileState[] = [];
-    const numbers: number[] = Array(5).fill(-1);
-    const lasts: number[] = Array(5).fill(-1);
-    for (const numberTile of sortedPrev) {
-      const { id, num, top, left, x, y } = numberTile;
-      if (numbers[left + x] === num) {
-        newNumberTiles.push({
-          id: id,
-          num: num,
-          top: top + y,
-          left: left + x,
-          x: 0,
-          y: lasts[left + x] - (top + y),
-          mergeState: MergeState.merged,
-          moveState: MoveState.moving,
-        });
-        numbers[left + x] = -1;
-      } else {
-        lasts[left + x] += 1;
-        newNumberTiles.push({
-          id: id,
-          num: num,
-          top: top + y,
-          left: left + x,
-          x: 0,
-          y: lasts[left + x] - (top + y),
-          mergeState: MergeState.none,
-          moveState: MoveState.moving,
-        });
-        numbers[left + x] = num;
-      }
-    }
-    let count = 0;
-    const candidate: number[] = [];
-    lasts.map((value, index) => {
-      if (value != 4) {
-        count += 1;
-        candidate.push(index);
-      }
-    });
-    const randomNumber = getRandomNumber(0, count - 1);
-    newNumberTiles.push({
-      id: Math.max(...newNumberTiles.map((value) => value.id)) + 1,
-      num: 2,
-      top: 4,
-      left: candidate[randomNumber],
-      x: 0,
-      y: 0,
-      mergeState: MergeState.none,
-      moveState: MoveState.notMoving,
-    });
-    return newNumberTiles;
-  });
-  cleanUp({ setNumberTiles: props.setNumberTiles });
-};
-const moveDown = (props: {
-  setNumberTiles: Dispatch<SetStateAction<TypeTileState[]>>;
-}) => {
-  props.setNumberTiles((prev) => {
-    const sortedPrev = prev.sort((a, b) => b.top + b.y - (a.top + a.y));
-    const newNumberTiles: TypeTileState[] = [];
-    const numbers: number[] = Array(5).fill(-1);
-    const lasts: number[] = Array(5).fill(5);
-    for (const numberTile of sortedPrev) {
-      const { id, num, top, left, x, y } = numberTile;
-      if (numbers[left + x] === num) {
-        newNumberTiles.push({
-          id: id,
-          num: num,
-          top: top + y,
-          left: left + x,
-          x: 0,
-          y: lasts[left + x] - (top + y),
-          mergeState: MergeState.merged,
-          moveState: MoveState.moving,
-        });
-        numbers[left + x] = -1;
-      } else {
-        lasts[left + x] -= 1;
-        newNumberTiles.push({
-          id: id,
-          num: num,
-          top: top + y,
-          left: left + x,
-          x: 0,
-          y: lasts[left + x] - (top + y),
-          mergeState: MergeState.none,
-          moveState: MoveState.moving,
-        });
-        numbers[left + x] = num;
-      }
-    }
-    let count = 0;
-    const candidate: number[] = [];
-    lasts.map((value, index) => {
-      if (value != 0) {
-        count += 1;
-        candidate.push(index);
-      }
-    });
-    const randomNumber = getRandomNumber(0, count - 1);
-    newNumberTiles.push({
-      id: Math.max(...newNumberTiles.map((value) => value.id)) + 1,
-      num: 2,
-      top: 0,
-      left: candidate[randomNumber],
-      x: 0,
-      y: 0,
-      mergeState: MergeState.none,
-      moveState: MoveState.notMoving,
-    });
-    return newNumberTiles;
-  });
-  cleanUp({ setNumberTiles: props.setNumberTiles });
-};
-const moveLeft = (props: {
-  setNumberTiles: Dispatch<SetStateAction<TypeTileState[]>>;
-}) => {
-  props.setNumberTiles((prev) => {
-    const sortedPrev = prev.sort((a, b) => a.left + a.x - (b.left + b.x));
-    const newNumberTiles: TypeTileState[] = [];
-    const numbers: number[] = Array(5).fill(-1);
-    const lasts: number[] = Array(5).fill(-1);
-    for (const numberTile of sortedPrev) {
-      const { id, num, top, left, x, y } = numberTile;
-      if (numbers[top + y] === num) {
-        newNumberTiles.push({
-          id: id,
-          num: num,
-          top: top + y,
-          left: left + x,
-          x: lasts[top + y] - (left + x),
-          y: 0,
-          mergeState: MergeState.merged,
-          moveState: MoveState.moving,
-        });
-        numbers[top + y] = -1;
-      } else {
-        lasts[top + y] += 1;
-        newNumberTiles.push({
-          id: id,
-          num: num,
-          top: top + y,
-          left: left + x,
-          x: lasts[top + y] - (left + x),
-          y: 0,
-          mergeState: MergeState.none,
-          moveState: MoveState.moving,
-        });
-        numbers[top + y] = num;
-      }
-    }
-    let count = 0;
-    const candidate: number[] = [];
-    lasts.map((value, index) => {
-      if (value != 4) {
-        count += 1;
-        candidate.push(index);
-      }
-    });
-    const randomNumber = getRandomNumber(0, count - 1);
-    newNumberTiles.push({
-      id: Math.max(...newNumberTiles.map((value) => value.id)) + 1,
-      num: 2,
-      top: candidate[randomNumber],
-      left: 4,
-      x: 0,
-      y: 0,
-      mergeState: MergeState.none,
-      moveState: MoveState.notMoving,
-    });
-    return newNumberTiles;
-  });
-  cleanUp({ setNumberTiles: props.setNumberTiles });
-};
-const moveRight = (props: {
-  setNumberTiles: Dispatch<SetStateAction<TypeTileState[]>>;
-}) => {
-  props.setNumberTiles((prev) => {
-    const sortedPrev = prev.sort((a, b) => b.left + b.x - (a.left + a.x));
-    const newNumberTiles: TypeTileState[] = [];
-    const numbers: number[] = Array(5).fill(-1);
-    const lasts: number[] = Array(5).fill(5);
-    for (const numberTile of sortedPrev) {
-      const { id, num, top, left, x, y } = numberTile;
-      if (numbers[top + y] === num) {
-        newNumberTiles.push({
-          id: id,
-          num: num,
-          top: top + y,
-          left: left + x,
-          x: lasts[top + y] - (left + x),
-          y: 0,
-          mergeState: MergeState.merged,
-          moveState: MoveState.moving,
-        });
-        numbers[top + y] = -1;
-      } else {
-        lasts[top + y] -= 1;
-        newNumberTiles.push({
-          id: id,
-          num: num,
-          top: top + y,
-          left: left + x,
-          x: lasts[top + y] - (left + x),
-          y: 0,
-          mergeState: MergeState.none,
-          moveState: MoveState.moving,
-        });
-        numbers[top + y] = num;
-      }
-    }
-    let count = 0;
-    const candidate: number[] = [];
-    lasts.map((value, index) => {
-      if (value != 0) {
-        count += 1;
-        candidate.push(index);
-      }
-    });
-    const randomNumber = getRandomNumber(0, count - 1);
-    newNumberTiles.push({
-      id: Math.max(...newNumberTiles.map((value) => value.id)) + 1,
-      num: 2,
-      top: candidate[randomNumber],
-      left: 0,
-      x: 0,
-      y: 0,
-      mergeState: MergeState.none,
-      moveState: MoveState.notMoving,
-    });
-    return newNumberTiles;
-  });
-  cleanUp({ setNumberTiles: props.setNumberTiles });
-};
-
 const useKeyDown = (props: {
   setNumberTiles: Dispatch<SetStateAction<TypeTileState[]>>;
-  gridNumber: number;
+  setGridNumber: Dispatch<SetStateAction<number>>;
 }) => {
   useEffect(() => {
     const handleKeyDown = (event: any) => {
       if (event.key === "ArrowUp") {
-        moveUp({ setNumberTiles: props.setNumberTiles });
+        moveUp({
+          setNumberTiles: props.setNumberTiles,
+          setGridNumber: props.setGridNumber,
+        });
       } else if (event.key === "ArrowDown") {
-        moveDown({ setNumberTiles: props.setNumberTiles });
+        moveDown({
+          setNumberTiles: props.setNumberTiles,
+          setGridNumber: props.setGridNumber,
+        });
       } else if (event.key === "ArrowLeft") {
-        moveLeft({ setNumberTiles: props.setNumberTiles });
+        moveLeft({
+          setNumberTiles: props.setNumberTiles,
+          setGridNumber: props.setGridNumber,
+        });
       } else if (event.key === "ArrowRight") {
-        moveRight({ setNumberTiles: props.setNumberTiles });
+        moveRight({
+          setNumberTiles: props.setNumberTiles,
+          setGridNumber: props.setGridNumber,
+        });
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -371,7 +72,7 @@ const useKeyDown = (props: {
 
 const useTouch = (props: {
   setNumberTiles: Dispatch<SetStateAction<TypeTileState[]>>;
-  gridNumber: number;
+  setGridNumber: Dispatch<SetStateAction<number>>;
 }) => {
   let touchStart: number[] = [0, 0];
   useEffect(() => {
@@ -386,15 +87,27 @@ const useTouch = (props: {
       const deltaY = event.changedTouches[0].clientY - touchStart[1];
       if (Math.abs(deltaX) < Math.abs(deltaY) && 0 < Math.abs(deltaY)) {
         if (deltaY < 0) {
-          moveUp({ setNumberTiles: props.setNumberTiles });
+          moveUp({
+            setNumberTiles: props.setNumberTiles,
+            setGridNumber: props.setGridNumber,
+          });
         } else {
-          moveDown({ setNumberTiles: props.setNumberTiles });
+          moveDown({
+            setNumberTiles: props.setNumberTiles,
+            setGridNumber: props.setGridNumber,
+          });
         }
       } else if (Math.abs(deltaY) < Math.abs(deltaX) && 0 < Math.abs(deltaX)) {
         if (deltaX < 0) {
-          moveLeft({ setNumberTiles: props.setNumberTiles });
+          moveLeft({
+            setNumberTiles: props.setNumberTiles,
+            setGridNumber: props.setGridNumber,
+          });
         } else {
-          moveRight({ setNumberTiles: props.setNumberTiles });
+          moveRight({
+            setNumberTiles: props.setNumberTiles,
+            setGridNumber: props.setGridNumber,
+          });
         }
       }
     };
@@ -412,7 +125,7 @@ const useTouch = (props: {
 
 const useMouse = (props: {
   setNumberTiles: Dispatch<SetStateAction<TypeTileState[]>>;
-  gridNumber: number;
+  setGridNumber: Dispatch<SetStateAction<number>>;
 }) => {
   let mouseStart: number[] = [0, 0];
   useEffect(() => {
@@ -427,15 +140,27 @@ const useMouse = (props: {
       const deltaY = event.clientY - mouseStart[1];
       if (Math.abs(deltaX) < Math.abs(deltaY) && 0 < Math.abs(deltaY)) {
         if (deltaY < 0) {
-          moveUp({ setNumberTiles: props.setNumberTiles });
+          moveUp({
+            setNumberTiles: props.setNumberTiles,
+            setGridNumber: props.setGridNumber,
+          });
         } else {
-          moveDown({ setNumberTiles: props.setNumberTiles });
+          moveDown({
+            setNumberTiles: props.setNumberTiles,
+            setGridNumber: props.setGridNumber,
+          });
         }
       } else if (Math.abs(deltaY) < Math.abs(deltaX) && 0 < Math.abs(deltaX)) {
         if (deltaX < 0) {
-          moveLeft({ setNumberTiles: props.setNumberTiles });
+          moveLeft({
+            setNumberTiles: props.setNumberTiles,
+            setGridNumber: props.setGridNumber,
+          });
         } else {
-          moveRight({ setNumberTiles: props.setNumberTiles });
+          moveRight({
+            setNumberTiles: props.setNumberTiles,
+            setGridNumber: props.setGridNumber,
+          });
         }
       }
     };
@@ -538,7 +263,7 @@ const Grid = (props: {
       ))}
       <div
         className={`grid ${
-          props.gridNumber === 4 ? "grid-cols-4" : "grid-cols-5"
+          props.gridNumber === 3 ? "grid-cols-3" : "grid-cols-5"
         } gap-3 p-4`}
       >
         {TileIDs.map((id) => (
@@ -555,15 +280,15 @@ const Game = () => {
   const tileState = TileState();
   useKeyDown({
     setNumberTiles: tileState.setNumberTiles,
-    gridNumber: gridNumber,
+    setGridNumber: setGridNumber,
   });
   useTouch({
     setNumberTiles: tileState.setNumberTiles,
-    gridNumber: gridNumber,
+    setGridNumber: setGridNumber,
   });
   useMouse({
     setNumberTiles: tileState.setNumberTiles,
-    gridNumber: gridNumber,
+    setGridNumber: setGridNumber,
   });
   useEffect(() => {
     tileState.setNumberTiles((prev) => {
@@ -582,7 +307,7 @@ const Game = () => {
         },
       ];
     });
-  }, []);
+  }, [gridNumber]);
   return (
     <div id="grid">
       <Grid
@@ -591,6 +316,24 @@ const Game = () => {
         setHeight={setHeight}
         gridNumber={gridNumber}
       />
+      <div className="flex justify-center gap-10">
+        <button
+          className="bg-cyan-100 rounded"
+          onClick={() => {
+            setGridNumber(3);
+          }}
+        >
+          grid数を3にする
+        </button>
+        <button
+          className="bg-cyan-100 rounded"
+          onClick={() => {
+            setGridNumber(5);
+          }}
+        >
+          grid数を5にする
+        </button>
+      </div>
     </div>
   );
 };
